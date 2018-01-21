@@ -8,6 +8,10 @@ import java.util.*;
  * disk).
  */
 public class SeqScan implements OpIterator {
+	private TransactionId transaction_id;
+	private int table_id;
+	private String table_alias;
+	private DbFileIterator itr;
 
 	private static final long serialVersionUID = 1L;
 
@@ -29,6 +33,10 @@ public class SeqScan implements OpIterator {
 	 */
 	public SeqScan(TransactionId tid, int tableid, String tableAlias) {
 		// some code goes here
+		transaction_id = tid;
+		table_id = tableid;
+		table_alias = tableAlias;
+		itr = Database.getCatalog().getDatabaseFile(tableid).iterator(tid);
 	}
 
 	/**
@@ -36,7 +44,7 @@ public class SeqScan implements OpIterator {
 	 *         the actual name of the table in the catalog of the database
 	 */
 	public String getTableName() {
-		return null;
+		return Database.getCatalog().getTableName(table_id);
 	}
 
 	/**
@@ -44,7 +52,7 @@ public class SeqScan implements OpIterator {
 	 */
 	public String getAlias() {
 		// some code goes here
-		return null;
+		return table_alias;
 	}
 
 	/**
@@ -62,6 +70,8 @@ public class SeqScan implements OpIterator {
 	 */
 	public void reset(int tableid, String tableAlias) {
 		// some code goes here
+		table_id = tableid;
+		table_alias = tableAlias;
 	}
 
 	public SeqScan(TransactionId tid, int tableId) {
@@ -70,6 +80,7 @@ public class SeqScan implements OpIterator {
 
 	public void open() throws DbException, TransactionAbortedException {
 		// some code goes here
+		itr.open();
 	}
 
 	/**
@@ -83,24 +94,41 @@ public class SeqScan implements OpIterator {
 	 */
 	public TupleDesc getTupleDesc() {
 		// some code goes here
-		return null;
+		String alias = table_alias;
+		if (alias == null) alias = "null";
+		
+		TupleDesc td = Database.getCatalog().getDatabaseFile(table_id).getTupleDesc();
+		Type[] type_ar = new Type[td.numFields()];
+		String[] field_ar = new String[td.numFields()];
+		
+		for (int i = 0; i < td.numFields(); i++) {
+			type_ar[i] = td.getFieldType(i);
+			
+			String field_name = td.getFieldName(i);
+			if (field_name == null) field_name = "null";
+			field_ar[i] = alias + "." + field_name;
+		}
+		
+		return new TupleDesc(type_ar, field_ar);
 	}
 
 	public boolean hasNext() throws TransactionAbortedException, DbException {
 		// some code goes here
-		return false;
+		return itr.hasNext();
 	}
 
 	public Tuple next() throws NoSuchElementException, TransactionAbortedException, DbException {
 		// some code goes here
-		return null;
+		return itr.next();
 	}
 
 	public void close() {
 		// some code goes here
+		itr.close();
 	}
 
 	public void rewind() throws DbException, NoSuchElementException, TransactionAbortedException {
 		// some code goes here
+		itr.rewind();
 	}
 }

@@ -43,7 +43,7 @@ public class HeapPageId implements PageId {
 	public int hashCode() {
 		// some code goes here
 		String hash_code = Integer.toString(tid) + Integer.toString(page_num);
-		return Integer.parseInt(hash_code);
+		return hash_code.hashCode();
 	}
 
 	/**
