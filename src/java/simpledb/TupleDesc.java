@@ -133,7 +133,6 @@ public class TupleDesc implements Serializable {
 	 */
 	public int fieldNameToIndex(String name) throws NoSuchElementException {
 		// some code goes here
-		
 		for (int i = 0; i < schema.length; i++) {
 			if (schema[i].fieldName == name) return i;
 		}
@@ -193,11 +192,15 @@ public class TupleDesc implements Serializable {
 
 	public boolean equals(Object o) {
 		// some code goes here
-		if (o != null && !(o instanceof TupleDesc) && ((TupleDesc)o).numFields() != schema.length) {
+		if (o == null || !(o instanceof TupleDesc)) return false;
+		
+		TupleDesc td = (TupleDesc) o;
+		if (td.numFields() != schema.length) {
 			return false;
 		}
+		
 		for (int i = 0; i < schema.length; i++) {
-			if (schema[i].fieldType != ((TupleDesc)o).getFieldType(i)) {
+			if (schema[i].fieldType != td.getFieldType(i)) {
 				return false;
 			}
 		}
