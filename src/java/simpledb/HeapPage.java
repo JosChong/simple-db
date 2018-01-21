@@ -298,12 +298,12 @@ public class HeapPage implements Page {
 		
 		for (int i = 0; i < header.length - 1; i++) {
 			for (int j = 0; j < 8; j++) {
-				if ((header[i] >> j & 0) == 1) num_empty++;
+				if ((header[i] >> j & 1) != 1) num_empty++;
 			}
 		}
 		int remaining_bits = numSlots - (header.length - 1) * 8;
 		for (int i = 0; i < remaining_bits; i++) {
-			if ((header[header.length - 1] >> i & 0) == 1) num_empty++;
+			if ((header[header.length - 1] >> i & 1) != 1) num_empty++;
 		}
 		
 		return num_empty;
