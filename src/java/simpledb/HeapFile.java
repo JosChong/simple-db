@@ -14,6 +14,8 @@ import java.util.*;
  * @author Sam Madden
  */
 public class HeapFile implements DbFile {
+	private File file;
+	private TupleDesc tuple_desc;
 
 	/**
 	 * Constructs a heap file backed by the specified file.
@@ -23,6 +25,8 @@ public class HeapFile implements DbFile {
 	 */
 	public HeapFile(File f, TupleDesc td) {
 		// some code goes here
+		f = file;
+		tuple_desc = td;
 	}
 
 	/**
@@ -32,7 +36,7 @@ public class HeapFile implements DbFile {
 	 */
 	public File getFile() {
 		// some code goes here
-		return null;
+		return file;
 	}
 
 	/**
@@ -46,7 +50,7 @@ public class HeapFile implements DbFile {
 	 */
 	public int getId() {
 		// some code goes here
-		throw new UnsupportedOperationException("implement this");
+		return file.getAbsoluteFile().hashCode();
 	}
 
 	/**
@@ -56,13 +60,32 @@ public class HeapFile implements DbFile {
 	 */
 	public TupleDesc getTupleDesc() {
 		// some code goes here
-		throw new UnsupportedOperationException("implement this");
+		return tuple_desc;
 	}
 
 	// see DbFile.java for javadocs
 	public Page readPage(PageId pid) {
 		// some code goes here
-		return null;
+		HeapPage page = null;
+		byte[] stream = new byte[BufferPool.getPageSize()];
+		long offset = pid.getPageNumber() * BufferPool.getPageSize();
+		
+		try {
+			RandomAccessFile f = new RandomAccessFile(file, "r");
+			f.seek(offset);
+			f.read(stream, 0, BufferPool.getPageSize());
+			f.close();
+			
+			page = new HeapPage(new HeapPageId(pid.getTableId(), pid.getPageNumber()), stream);
+		}
+		catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return page;
 	}
 
 	// see DbFile.java for javadocs
@@ -76,7 +99,7 @@ public class HeapFile implements DbFile {
 	 */
 	public int numPages() {
 		// some code goes here
-		return 0;
+		return (int) Math.ceil(file.length() / BufferPool.getPageSize());
 	}
 
 	// see DbFile.java for javadocs
