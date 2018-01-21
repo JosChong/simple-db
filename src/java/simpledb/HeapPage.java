@@ -315,8 +315,8 @@ public class HeapPage implements Page {
 	public boolean isSlotUsed(int i) {
 		// some code goes here
 		int header_byte = (int) Math.floor(i / 8.0);
-		int byte_bit = i - header_byte;
-		return (header[header_byte] >> byte_bit & 1) == 1;
+		int byte_bit = i - header_byte * 8;
+		return ((header[header_byte] >> byte_bit & 1) == 1);
 	}
 
 	/**
@@ -336,11 +336,17 @@ public class HeapPage implements Page {
 		// some code goes here
 		filled_slots = new Tuple[numSlots - getNumEmptySlots()];
 		int count = 0;
-		for (int i = 0; i < numSlots; i++) {
-			if (header[i] == 1) {
-				filled_slots[count++] = tuples[i];
+		
+		for (int i = 0; i < header.length - 1; i++) {
+			for (int j = 0; j < 8; j++) {
+				if ((header[i] >> j & 1) == 1) filled_slots[count++] = tuples[i * 8 + j];
 			}
 		}
+		int remaining_bits = numSlots - (header.length - 1) * 8;
+		for (int i = 0; i < remaining_bits; i++) {
+			if ((header[header.length - 1] >> i & 1) == 1) filled_slots[count++] = tuples[(header.length - 1) * 8 + i];
+		}
+		
 		return Arrays.asList(filled_slots).iterator();
 	}
 }
