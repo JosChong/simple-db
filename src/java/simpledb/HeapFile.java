@@ -25,7 +25,7 @@ public class HeapFile implements DbFile {
 	 */
 	public HeapFile(File f, TupleDesc td) {
 		// some code goes here
-		f = file;
+		file = f;
 		tuple_desc = td;
 	}
 
@@ -120,7 +120,6 @@ public class HeapFile implements DbFile {
 	// see DbFile.java for javadocs
 	public DbFileIterator iterator(TransactionId tid) {
 		// some code goes here
-		return null;
+		return new HeapFileIterator(this, tid);
 	}
-
 }
