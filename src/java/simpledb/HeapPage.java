@@ -21,6 +21,8 @@ public class HeapPage implements Page {
 
 	byte[] oldData;
 	private final Byte oldDataLock = new Byte((byte) 0);
+	
+	private Tuple[] filled_slots;
 
 	/**
 	 * Create a HeapPage from a set of bytes of data read from disk. The format of a
@@ -72,8 +74,7 @@ public class HeapPage implements Page {
 	 */
 	private int getNumTuples() {
 		// some code goes here
-		return 0;
-
+		return Math.floorDiv(BufferPool.getPageSize()*8, Database.getCatalog().getTupleDesc(pid.getTableId()).getSize() * 8 + 1);
 	}
 
 	/**
@@ -84,10 +85,8 @@ public class HeapPage implements Page {
 	 *         tuple occupying tupleSize bytes
 	 */
 	private int getHeaderSize() {
-
 		// some code goes here
-		return 0;
-
+		return (int) Math.ceil(numSlots/8);
 	}
 
 	/**
@@ -119,7 +118,7 @@ public class HeapPage implements Page {
 	 */
 	public HeapPageId getId() {
 		// some code goes here
-		throw new UnsupportedOperationException("implement this");
+		return pid;
 	}
 
 	/**
@@ -295,7 +294,13 @@ public class HeapPage implements Page {
 	 */
 	public int getNumEmptySlots() {
 		// some code goes here
-		return 0;
+		int num_empty = 0;
+		for (int i = 0; i < numSlots; i++) {
+			if (header[i] == 0) {
+				num_empty++;
+			}
+		}
+		return num_empty;
 	}
 
 	/**
@@ -303,7 +308,8 @@ public class HeapPage implements Page {
 	 */
 	public boolean isSlotUsed(int i) {
 		// some code goes here
-		return false;
+		if (i < 0 || i >= numSlots) return false;
+		return (header[i] == 1);
 	}
 
 	/**
@@ -321,7 +327,13 @@ public class HeapPage implements Page {
 	 */
 	public Iterator<Tuple> iterator() {
 		// some code goes here
-		return null;
+		filled_slots = new Tuple[numSlots - getNumEmptySlots()];
+		int count = 0;
+		for (int i = 0; i < numSlots; i++) {
+			if (header[i] == 1) {
+				filled_slots[count++] = tuples[i];
+			}
+		}
+		return Arrays.asList(filled_slots).iterator();
 	}
-
 }
