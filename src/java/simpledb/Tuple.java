@@ -26,7 +26,9 @@ public class Tuple implements Serializable {
 	 */
 	public Tuple(TupleDesc td) {
 		// some code goes here
-		if (!(td instanceof TupleDesc) || td.numFields() < 1) return;
+		assert(td instanceof TupleDesc);
+		assert(td.numFields() > 0);
+		
 		schema = td;
 		fields = new Field[td.numFields()];
 	}
