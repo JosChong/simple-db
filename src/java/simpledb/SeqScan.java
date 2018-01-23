@@ -8,12 +8,12 @@ import java.util.*;
  * disk).
  */
 public class SeqScan implements OpIterator {
+	private static final long serialVersionUID = 1L;
+	
 	private TransactionId transaction_id;
 	private int table_id;
 	private String table_alias;
 	private DbFileIterator itr;
-
-	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Creates a sequential scan over the specified table as a part of the specified
@@ -94,22 +94,22 @@ public class SeqScan implements OpIterator {
 	 */
 	public TupleDesc getTupleDesc() {
 		// some code goes here
+		TupleDesc td = Database.getCatalog().getDatabaseFile(table_id).getTupleDesc();
+		Type[] typeAr = new Type[td.numFields()];
+		String[] fieldAr = new String[td.numFields()];
+		
 		String alias = table_alias;
 		if (alias == null) alias = "null";
 		
-		TupleDesc td = Database.getCatalog().getDatabaseFile(table_id).getTupleDesc();
-		Type[] type_ar = new Type[td.numFields()];
-		String[] field_ar = new String[td.numFields()];
-		
 		for (int i = 0; i < td.numFields(); i++) {
-			type_ar[i] = td.getFieldType(i);
+			typeAr[i] = td.getFieldType(i);
 			
 			String field_name = td.getFieldName(i);
 			if (field_name == null) field_name = "null";
-			field_ar[i] = alias + "." + field_name;
+			fieldAr[i] = alias + "." + field_name;
 		}
 		
-		return new TupleDesc(type_ar, field_ar);
+		return new TupleDesc(typeAr, fieldAr);
 	}
 
 	public boolean hasNext() throws TransactionAbortedException, DbException {
@@ -127,7 +127,7 @@ public class SeqScan implements OpIterator {
 		itr.close();
 	}
 
-	public void rewind() throws DbException, NoSuchElementException, TransactionAbortedException {
+	public void rewind() throws NoSuchElementException, TransactionAbortedException, DbException {
 		// some code goes here
 		itr.rewind();
 	}

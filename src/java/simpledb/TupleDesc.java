@@ -7,14 +7,14 @@ import java.util.*;
  * TupleDesc describes the schema of a tuple.
  */
 public class TupleDesc implements Serializable {
-
+	private static final long serialVersionUID = 1L;
+	
 	private TDItem[] schema;
 	
 	/**
 	 * A help class to facilitate organizing the information of each field
 	 */
 	public static class TDItem implements Serializable {
-
 		private static final long serialVersionUID = 1L;
 
 		/**
@@ -45,8 +45,6 @@ public class TupleDesc implements Serializable {
 		// some code goes here
 		return Arrays.asList(schema).iterator();
 	}
-
-	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Create a new TupleDesc with typeAr.length fields with fields of the specified
@@ -102,7 +100,7 @@ public class TupleDesc implements Serializable {
 	 */
 	public String getFieldName(int i) throws NoSuchElementException {
 		// some code goes here
-		if (i < 0 || i >= schema.length) { throw new NoSuchElementException(); }
+		if (i < 0 || i >= schema.length) throw new NoSuchElementException("Invalid index.");
 		return schema[i].fieldName;
 	}
 
@@ -118,7 +116,7 @@ public class TupleDesc implements Serializable {
 	 */
 	public Type getFieldType(int i) throws NoSuchElementException {
 		// some code goes here
-		if (i < 0 || i >= schema.length) { throw new NoSuchElementException(); }
+		if (i < 0 || i >= schema.length) throw new NoSuchElementException("Invalid index.");
 		return schema[i].fieldType;
 	}
 
@@ -133,11 +131,11 @@ public class TupleDesc implements Serializable {
 	 */
 	public int fieldNameToIndex(String name) throws NoSuchElementException {
 		// some code goes here
-		if (name == null) throw new NoSuchElementException();
+		if (name == null) throw new NoSuchElementException("Name cannot be null.");
 		for (int i = 0; i < schema.length; i++) {
 			if (name.equals(schema[i].fieldName)) return i;
 		}
-		throw new NoSuchElementException();
+		throw new NoSuchElementException("Matching field not found");
 	}
 
 	/**
@@ -196,15 +194,12 @@ public class TupleDesc implements Serializable {
 		if (o == null || !(o instanceof TupleDesc)) return false;
 		
 		TupleDesc td = (TupleDesc) o;
-		if (td.numFields() != schema.length) {
-			return false;
-		}
+		if (schema.length != td.numFields()) return false;
 		
 		for (int i = 0; i < schema.length; i++) {
-			if (schema[i].fieldType != td.getFieldType(i)) {
-				return false;
-			}
+			if (schema[i].fieldType != td.getFieldType(i)) return false;
 		}
+		
 		return true;
 	}
 

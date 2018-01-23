@@ -3,6 +3,7 @@ package simpledb;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * Tuple maintains information about the contents of a tuple. Tuples have a
@@ -10,7 +11,6 @@ import java.util.Iterator;
  * with the data for each field.
  */
 public class Tuple implements Serializable {
-
 	private static final long serialVersionUID = 1L;
 
 	private TupleDesc schema;
@@ -26,8 +26,7 @@ public class Tuple implements Serializable {
 	 */
 	public Tuple(TupleDesc td) {
 		// some code goes here
-		assert (td instanceof TupleDesc);
-		assert (td.numFields() > 0);
+		if (!(td instanceof TupleDesc) || td.numFields() < 1) return;
 		schema = td;
 		fields = new Field[td.numFields()];
 	}
@@ -46,7 +45,7 @@ public class Tuple implements Serializable {
 	 */
 	public RecordId getRecordId() {
 		// some code goes here
-		return null;
+		return rid;
 	}
 
 	/**
@@ -57,6 +56,7 @@ public class Tuple implements Serializable {
 	 */
 	public void setRecordId(RecordId rid) {
 		// some code goes here
+		this.rid = rid;
 	}
 
 	/**
@@ -67,9 +67,9 @@ public class Tuple implements Serializable {
 	 * @param f
 	 *            new value for the field.
 	 */
-	public void setField(int i, Field f) {
+	public void setField(int i, Field f) throws NoSuchElementException {
 		// some code goes here
-		assert (i >= 0 && i < fields.length);
+		if (i < 0 || i >= fields.length) throw new NoSuchElementException("Invalid index.");
 		fields[i] = f;
 	}
 
@@ -79,9 +79,9 @@ public class Tuple implements Serializable {
 	 * @param i
 	 *            field index to return. Must be a valid index.
 	 */
-	public Field getField(int i) {
+	public Field getField(int i) throws NoSuchElementException {
 		// some code goes here
-		assert (i >= 0 && i < fields.length);
+		if (i < 0 || i >= fields.length) throw new NoSuchElementException("Invalid index.");
 		return fields[i];
 	}
 
@@ -116,10 +116,9 @@ public class Tuple implements Serializable {
 	/**
 	 * reset the TupleDesc of this tuple (only affecting the TupleDesc)
 	 */
-	public void resetTupleDesc(TupleDesc td) {
+	public void resetTupleDesc(TupleDesc td) throws DbException {
 		// some code goes here
-		assert (td instanceof TupleDesc);
-		assert (td.numFields() > 0);
+		if (!(td instanceof TupleDesc) || td.numFields() < 1) throw new DbException("Invalid schema.");
 		schema = td;
 		fields = new Field[td.numFields()];
 	}

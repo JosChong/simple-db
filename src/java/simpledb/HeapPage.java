@@ -12,7 +12,6 @@ import java.io.*;
  *
  */
 public class HeapPage implements Page {
-
 	final HeapPageId pid;
 	final TupleDesc td;
 	final byte header[];
@@ -74,7 +73,7 @@ public class HeapPage implements Page {
 	 */
 	private int getNumTuples() {
 		// some code goes here
-		return (int) Math.floor((BufferPool.getPageSize() * 8.0) / (td.getSize() * 8.0 + 1));
+		return (int) Math.floor((BufferPool.getPageSize() * 8.0) / (td.getSize() * 8.0 + 1.0));
 	}
 
 	/**

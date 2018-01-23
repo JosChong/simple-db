@@ -19,7 +19,7 @@ public class Catalog {
 	private Vector<DbFile> tables;
 	private Vector<Integer> table_ids;
 	private Vector<String> table_names;
-	private Vector<String> table_pkeys;
+	private Vector<String> table_pks;
 
 	/**
 	 * Constructor. Creates a new, empty catalog.
@@ -29,7 +29,7 @@ public class Catalog {
 		tables = new Vector<DbFile>();
 		table_ids = new Vector<Integer>();
 		table_names = new Vector<String>();
-		table_pkeys = new Vector<String>();
+		table_pks = new Vector<String>();
 	}
 
 	/**
@@ -46,28 +46,27 @@ public class Catalog {
 	 * @param pkeyField
 	 *            the name of the primary key field
 	 */
-	public void addTable(DbFile file, String name, String pkeyField) {
+	public void addTable(DbFile file, String name, String pkeyField) throws NoSuchElementException {
 		// some code goes here
-		if (name != null) {
-			if (table_names.contains(name)) {
-				int index = table_names.indexOf(name);
-				tables.removeElementAt(index);
-				table_ids.removeElementAt(index);
-				table_names.removeElementAt(index);
-				table_pkeys.removeElementAt(index);
-			}
-			if (table_ids.contains(file.getId())) {
-				int index = table_ids.indexOf(file.getId());
-				tables.removeElementAt(index);
-				table_ids.removeElementAt(index);
-				table_names.removeElementAt(index);
-				table_pkeys.removeElementAt(index);
-			}
-			tables.addElement(file);
-			table_ids.addElement(file.getId());
-			table_names.addElement(name);
-			table_pkeys.addElement(pkeyField);
+		if (name == null) throw new NoSuchElementException("Name cannot be null.");
+		if (table_ids.contains(file.getId())) {
+			int index = table_ids.indexOf(file.getId());
+			tables.removeElementAt(index);
+			table_ids.removeElementAt(index);
+			table_names.removeElementAt(index);
+			table_pks.removeElementAt(index);
 		}
+		else if (table_names.contains(name)) {
+			int index = table_names.indexOf(name);
+			tables.removeElementAt(index);
+			table_ids.removeElementAt(index);
+			table_names.removeElementAt(index);
+			table_pks.removeElementAt(index);
+		}
+		tables.addElement(file);
+		table_ids.addElement(file.getId());
+		table_names.addElement(name);
+		table_pks.addElement(pkeyField);
 	}
 
 	public void addTable(DbFile file, String name) {
@@ -94,7 +93,7 @@ public class Catalog {
 	 */
 	public int getTableId(String name) throws NoSuchElementException {
 		// some code goes here
-		if (!table_names.contains(name)) throw new NoSuchElementException();
+		if (!table_names.contains(name)) throw new NoSuchElementException("Table does not exist.");
 		return table_ids.get(table_names.indexOf(name));
 	}
 
@@ -109,7 +108,7 @@ public class Catalog {
 	 */
 	public TupleDesc getTupleDesc(int tableid) throws NoSuchElementException {
 		// some code goes here
-		if (!table_ids.contains(tableid)) throw new NoSuchElementException();
+		if (!table_ids.contains(tableid)) throw new NoSuchElementException("Table does not exist.");
 		return tables.get(table_ids.indexOf(tableid)).getTupleDesc();
 	}
 
@@ -123,14 +122,14 @@ public class Catalog {
 	 */
 	public DbFile getDatabaseFile(int tableid) throws NoSuchElementException {
 		// some code goes here
-		if (!table_ids.contains(tableid)) throw new NoSuchElementException();
+		if (!table_ids.contains(tableid)) throw new NoSuchElementException("Table does not exist.");
 		return tables.get(table_ids.indexOf(tableid));
 	}
 
-	public String getPrimaryKey(int tableid) {
+	public String getPrimaryKey(int tableid) throws NoSuchElementException {
 		// some code goes here
-		if (!table_ids.contains(tableid)) throw new NoSuchElementException();
-		return table_pkeys.get(table_ids.indexOf(tableid));
+		if (!table_ids.contains(tableid)) throw new NoSuchElementException("Table does not exist.");
+		return table_pks.get(table_ids.indexOf(tableid));
 	}
 
 	public Iterator<Integer> tableIdIterator() {
@@ -138,9 +137,9 @@ public class Catalog {
 		return table_ids.iterator();
 	}
 
-	public String getTableName(int id) {
+	public String getTableName(int id) throws NoSuchElementException {
 		// some code goes here
-		if (!table_ids.contains(id)) throw new NoSuchElementException();
+		if (!table_ids.contains(id)) throw new NoSuchElementException("Table does not exist.");
 		return table_names.get(table_ids.indexOf(id));
 	}
 
@@ -150,7 +149,7 @@ public class Catalog {
 		tables.clear();
 		table_ids.clear();
 		table_names.clear();
-		table_pkeys.clear();
+		table_pks.clear();
 	}
 
 	/**
