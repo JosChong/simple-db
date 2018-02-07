@@ -153,6 +153,7 @@ public class BufferPool {
 			throws DbException, IOException, TransactionAbortedException {
 		// some code goes here
 		// not necessary for lab1
+		
 	}
 
 	/**
@@ -173,6 +174,8 @@ public class BufferPool {
 	public void deleteTuple(TransactionId tid, Tuple t) throws DbException, IOException, TransactionAbortedException {
 		// some code goes here
 		// not necessary for lab1
+		
+		
 	}
 
 	/**

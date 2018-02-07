@@ -92,6 +92,14 @@ public class HeapFile implements DbFile {
 	public void writePage(Page page) throws IOException {
 		// some code goes here
 		// not necessary for lab1
+		try {
+			RandomAccessFile raf = new RandomAccessFile(file, "rw");
+			raf.seek(page.getId().getPageNumber() * BufferPool.getPageSize());
+			raf.write(page.getPageData(), 0, BufferPool.getPageSize());
+			raf.close();
+		} catch (IOException e) {
+			System.out.println(e.getMessage());
+		}
 	}
 
 	/**
@@ -106,15 +114,33 @@ public class HeapFile implements DbFile {
 	public ArrayList<Page> insertTuple(TransactionId tid, Tuple t)
 			throws DbException, IOException, TransactionAbortedException {
 		// some code goes here
-		return null;
 		// not necessary for lab1
+		HeapPage page = null;
+	    	for (int i = 0; i < numPages(); i++)
+	    	{
+	    		HeapPage temp_page = (HeapPage) Database.getBufferPool().getPage(tid, new HeapPageId(getId(), i), Permissions.READ_WRITE);
+	        	if (temp_page.getNumEmptySlots() > 0) {
+	        		page = (HeapPage) Database.getBufferPool().getPage(tid, new HeapPageId(getId(), i), Permissions.READ_WRITE);
+	        		i = numPages();
+	        	}
+	    	}
+	    	
+	    	if (page == null) {
+	    		writePage(new HeapPage(new HeapPageId(getId(), numPages()), HeapPage.createEmptyPageData()));
+	    		page = (HeapPage) Database.getBufferPool().getPage(tid, new HeapPageId(getId(), numPages() - 1), Permissions.READ_WRITE);
+	    	}
+	    	
+	    	page.insertTuple(t);
+	    	return new ArrayList<Page>(Arrays.asList(page));
 	}
 
 	// see DbFile.java for javadocs
 	public ArrayList<Page> deleteTuple(TransactionId tid, Tuple t) throws DbException, TransactionAbortedException {
 		// some code goes here
-		return null;
 		// not necessary for lab1
+		HeapPage page = (HeapPage) Database.getBufferPool().getPage(tid, t.getRecordId().getPageId(), Permissions.READ_WRITE);
+	    	page.deleteTuple(t);
+	    return new ArrayList<Page> (Arrays.asList(page));
 	}
 
 	// see DbFile.java for javadocs
