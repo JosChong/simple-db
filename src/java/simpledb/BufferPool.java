@@ -2,6 +2,9 @@ package simpledb;
 
 import java.io.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+
+import java.util.Iterator;
 
 /**
  * BufferPool manages the reading and writing of pages into memory from disk.
@@ -17,6 +20,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class BufferPool {
 	private ConcurrentHashMap<PageId, Page> cache;
 	private int max_pages;
+	
+	private PageId most_recent_page;
 	
 	/** Bytes per page, including header. */
 	private static final int DEFAULT_PAGE_SIZE = 4096;
@@ -40,6 +45,8 @@ public class BufferPool {
 		// some code goes here
 		cache = new ConcurrentHashMap<PageId, Page>();
 		max_pages = numPages;
+		
+		most_recent_page = null;
 	}
 
 	public static int getPageSize() {
@@ -76,11 +83,12 @@ public class BufferPool {
 			throws TransactionAbortedException, DbException {
 		// some code goes here
 		if (cache.containsKey(pid)) return cache.get(pid);
-		if (cache.size() >= max_pages) throw new DbException("Buffer pool is full.");
+		if (cache.size() >= max_pages) evictPage();
 		
 		DbFile file = Database.getCatalog().getDatabaseFile(pid.getTableId());
 		Page page = file.readPage(pid);
 		cache.put(pid, page);
+		most_recent_page = pid;
 		return page;
 	}
 
@@ -153,7 +161,11 @@ public class BufferPool {
 			throws DbException, IOException, TransactionAbortedException {
 		// some code goes here
 		// not necessary for lab1
-		
+		ArrayList<Page> dirty_pages = Database.getCatalog().getDatabaseFile(tableId).insertTuple(tid, t);
+	    	for (Page page : dirty_pages) {
+	    		page.markDirty(true, tid);
+	    		cache.put(page.getId(), page);
+	    	}
 	}
 
 	/**
@@ -174,8 +186,11 @@ public class BufferPool {
 	public void deleteTuple(TransactionId tid, Tuple t) throws DbException, IOException, TransactionAbortedException {
 		// some code goes here
 		// not necessary for lab1
-		
-		
+		ArrayList<Page> dirty_pages = Database.getCatalog().getDatabaseFile(t.getRecordId().getPageId().getTableId()).deleteTuple(tid, t);
+	    	for (Page page : dirty_pages) {
+	    		page.markDirty(true, tid);
+	    		cache.put(page.getId(), page);
+	    	}
 	}
 
 	/**
@@ -185,7 +200,9 @@ public class BufferPool {
 	public synchronized void flushAllPages() throws IOException {
 		// some code goes here
 		// not necessary for lab1
-
+		for (PageId pid : cache.keySet()) {
+			flushPage(pid);
+		}
 	}
 
 	/**
@@ -199,6 +216,7 @@ public class BufferPool {
 	public synchronized void discardPage(PageId pid) {
 		// some code goes here
 		// not necessary for lab1
+		cache.remove(pid);
 	}
 
 	/**
@@ -210,6 +228,12 @@ public class BufferPool {
 	private synchronized void flushPage(PageId pid) throws IOException {
 		// some code goes here
 		// not necessary for lab1
+		Page page = cache.get(pid);
+		TransactionId tid = page.isDirty();
+		if (tid != null) {
+			Database	.getCatalog().getDatabaseFile(pid.getTableId()).writePage(cache.get(pid));
+			page.markDirty(false, tid);
+		}
 	}
 
 	/**
@@ -227,6 +251,11 @@ public class BufferPool {
 	private synchronized void evictPage() throws DbException {
 		// some code goes here
 		// not necessary for lab1
+		try {
+			flushPage(most_recent_page);
+			discardPage(most_recent_page);
+		} catch (IOException e) {
+			System.out.println(e.getMessage());
+		}
 	}
-
 }
