@@ -3,6 +3,11 @@ package simpledb;
 /** A class to represent a fixed-width histogram over a single integer-based field.
  */
 public class IntHistogram {
+	private int[] buckets;
+	private int bucketRange;
+	private int minValue;
+	private int maxValue;
+	private int tupleCount;
 
     /**
      * Create a new IntHistogram.
@@ -22,6 +27,12 @@ public class IntHistogram {
      */
     public IntHistogram(int buckets, int min, int max) {
     	// some code goes here
+    		this.buckets = new int[buckets];
+    		minValue = min;
+    		maxValue = max;
+    		
+    		// Calculate and set bucket width
+    		bucketRange = (int) Math.ceil((max - min + 1.0) / buckets);
     }
 
     /**
@@ -30,6 +41,9 @@ public class IntHistogram {
      */
     public void addValue(int v) {
     	// some code goes here
+    		int bucket = (v - minValue) / bucketRange;
+    		buckets[bucket]++;
+    		tupleCount++;
     }
 
     /**
@@ -43,9 +57,78 @@ public class IntHistogram {
      * @return Predicted selectivity of this particular operator and value
      */
     public double estimateSelectivity(Predicate.Op op, int v) {
-
     	// some code goes here
-        return -1.0;
+    	
+    		// Variable initialization
+    		int bucket = (v - minValue) / bucketRange;
+        int bucketStart = bucket * bucketRange + minValue;
+        int bucketEnd = bucket * bucketRange + minValue + bucketRange - 1;
+        
+        // Switch statement for operator argument
+        switch (op) {
+        		case EQUALS:
+        			if (v < minValue || v > maxValue) {
+        				return 0;
+        			} else {
+        				return (double) buckets[bucket] / bucketRange / tupleCount;
+        			}
+        		case NOT_EQUALS:
+        			if (v < minValue || v > maxValue) {
+        				return 1;
+        			} else {
+        				return 1 - (double) buckets[bucket] / bucketRange / tupleCount;
+        			}
+        		case LESS_THAN:
+        			if (v <= minValue) {
+        				return 0;
+        			} else if (v > maxValue) {
+        				return 1;
+        			} else {
+        				double selectivity = (double) buckets[bucket] / tupleCount * (v - bucketStart) / bucketRange;
+            			for (int i = bucket - 1; i >= 0; i--) {
+                			selectivity += (double) buckets[i] / tupleCount;
+                		}
+            			return selectivity;
+        			}
+        		case LESS_THAN_OR_EQ:
+        			if (v < minValue) {
+        				return 0;
+        			} else if (v >= maxValue) {
+        				return 1;
+        			} else {
+        				double selectivity = (double) buckets[bucket] / tupleCount * (v - bucketStart) / bucketRange + (double) buckets[bucket] / bucketRange / tupleCount;
+        				for (int i = bucket - 1; i >= 0; i--) {
+                			selectivity += (double) buckets[i] / tupleCount;
+                		}
+            			return selectivity;
+        			}
+        		case GREATER_THAN:
+        			if (v < minValue) {
+        				return 1;
+        			} else if (v >= maxValue) {
+        				return 0;
+        			} else {
+        				double selectivity = (double) buckets[bucket] / tupleCount * (bucketEnd - v) / bucketRange;
+            			for (int i = bucket + 1; i < buckets.length; i++) {
+                			selectivity += (double) buckets[i] / tupleCount;
+                		}
+            			return selectivity;
+        			}
+        		case GREATER_THAN_OR_EQ:
+        			if (v <= minValue) {
+        				return 1;
+        			} else if (v > maxValue) {
+        				return 0;
+        			} else {
+        				double selectivity = (double) buckets[bucket] / tupleCount * (bucketEnd - v) / bucketRange + (double) buckets[bucket] / bucketRange / tupleCount;
+            			for (int i = bucket + 1; i < buckets.length; i++) {
+                			selectivity += (double) buckets[i] / tupleCount;
+                		}
+            			return selectivity;
+        			}
+        		default:
+        			return -1;
+        }
     }
     
     /**

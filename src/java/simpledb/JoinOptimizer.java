@@ -111,7 +111,8 @@ public class JoinOptimizer {
             // HINT: You may need to use the variable "j" if you implemented
             // a join algorithm that's more complicated than a basic
             // nested-loops join.
-            return -1.0;
+        		// Using nested-loops join
+        	 	return cost1 + card1 * cost2 + card1 * card2;
         }
     }
 
@@ -157,7 +158,27 @@ public class JoinOptimizer {
             Map<String, Integer> tableAliasToId) {
         int card = 1;
         // some code goes here
-        return card <= 0 ? 1 : card;
+        if (joinOp == Predicate.Op.EQUALS) {
+            if (t1pkey && !t2pkey) {
+                card = card2;
+            } else if (!t1pkey && t2pkey) {
+                card = card1;
+            } else {
+            		if (card1 > card2) {
+            			card = card1;
+            		} else {
+            			card = card2;
+            		}
+            }
+        } else {
+            card = (int) (0.25 * card1 * card2);
+        }
+
+        if (card > 0) {
+        		return card;
+        } else {
+        		return 1;
+        }
     }
 
     /**
@@ -221,7 +242,35 @@ public class JoinOptimizer {
 
         // some code goes here
         //Replace the following
-        return joins;
+        Set<LogicalJoinNode> joinNodes = new HashSet<LogicalJoinNode>();
+        joinNodes.addAll(joins);
+        
+        Set<Set<LogicalJoinNode>> joinNodesSet = enumerateSubsets(joins, 1);
+        
+        PlanCache joinPlan = new PlanCache();
+        
+        for (int i = 1; i <= joinNodesSet.size(); i++) {
+        		Set<Set<LogicalJoinNode>> joinNodesSubset = enumerateSubsets(joins, i);
+        		
+        		for (Set<LogicalJoinNode> nodes : joinNodesSubset) {
+        			Vector<LogicalJoinNode> minCostPlan = null;
+        			int minCard = Integer.MAX_VALUE;
+        			double minCost = Double.MAX_VALUE;
+        			
+        			for (LogicalJoinNode node : nodes) {
+        				CostCard c = computeCostAndCardOfSubplan(stats, filterSelectivities, node, nodes, Double.MAX_VALUE, joinPlan);
+        				if (c != null && c.cost < minCost) {
+        					minCard = c.card;
+        					minCost = c.cost;
+        					minCostPlan = c.plan;
+        				}
+        			}
+        			
+        			joinPlan.addPlan(nodes, minCost, minCard, minCostPlan);
+        		}
+        }
+        
+        return joinPlan.getOrder(joinNodes);
     }
 
     // ===================== Private Methods =================================

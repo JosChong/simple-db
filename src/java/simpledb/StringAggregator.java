@@ -33,7 +33,7 @@ public class StringAggregator implements Aggregator {
     		agg_operator = what;
     		counts = new ConcurrentHashMap<Field, Integer>();
     		
-	    	if (agg_operator != Aggregator.Op.COUNT) throw new IllegalArgumentException("only supports COUNT");
+	    	if (agg_operator != Aggregator.Op.COUNT) throw new IllegalArgumentException("Only supports COUNT");
     }
 
     /**
